@@ -1,0 +1,1 @@
+URL Generator Contentful UI Extension
