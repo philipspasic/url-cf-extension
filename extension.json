@@ -1,0 +1,6 @@
+{
+  "id": "url",
+  "name": "URL Generator",
+  "srcdoc": "./index.html",
+  "fieldTypes": ["Symbol"]
+}

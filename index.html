@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="https://static.contentful.com/app/main-62e0abc7.css" media="all" rel="stylesheet" type="text/css">
+    <link href="https://static.contentful.com/app/vendor-976872d7.css" media="all" rel="stylesheet" type="text/css">
+    <link href="https://contentful.github.io/ui-extensions-sdk/cf-extension.css" media="all" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://unpkg.com/contentful-ui-extensions-sdk@3"></script>
+  </head>
+  <body>
+    <div class="widget-url">
+      <input id="url" type="text" class="form-control" style="width: 98%; font-size: 14px">
+    </div>
+
+    <script>
+    var cfExt = window.contentfulExtension || window.contentfulWidget
+    cfExt.init(async function(api) {
+      api.window.updateHeight()
+      
+      let locales = api.locales.available
+      let locale = api.field.locale
+      
+      let slug = api.entry.fields.slug._fieldLocales[locale]
+      let type = api.contentType.sys.id
+      
+      let input = document.getElementById('url')
+      
+      let prefix = locales.length > 1 ? "/" + locale + "/" : "/"
+      let parentPage = api.entry.fields.parentPage
+      let parent
+      
+      if(parentPage) {
+        parentPage.onValueChanged(async function(value) {
+          if(value) {
+            parent = await api.space.getEntry(value.sys.id)
+          } else {
+            parent = null
+          }
+          setValue(slug._value)
+        })
+      }
+      
+      if(!parentPage && slug && type !== "page") {
+        let promise = await api.space.getEntries({
+        	'locale': locale,
+          'content_type': 'page',
+          'fields.parentOf': type,
+          'limit': 1,
+          'include': 3
+        })
+        parent = promise.items[0]
+      }
+      
+      function parseUrl(value) {
+        let url
+        
+        if(parent && parent.fields) {
+          let parentUrl
+          
+          if(!parent.fields.url) {
+          	parentUrl = prefix + parent.fields.slug[locale]
+          } else {
+          	parentUrl = parent.fields.url[locale]
+          }
+          
+        	url = parentUrl + "/" + value
+        } else {
+        	url = prefix + value
+        }
+        
+      	return url
+      }
+      
+      function setValue(value) {
+        let url = parseUrl(value)
+      	input.value = url
+        api.field.setValue(url)
+      }
+      
+      slug.onValueChanged(function(value) {
+      	setValue(value)
+      })
+      
+      input.addEventListener('input', function () {
+        api.field.setValue(input.value)
+      })
+      
+      input.addEventListener('change', function () {
+        api.field.setValue(input.value)
+      })
+       
+    })
+    </script>
+  </body>
+</html>
